@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h2 class="card-title mb-0">تفاصيل السؤال</h2>
+                <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-arrow-right me-1"></i> العودة إلى السجل
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">التاريخ والوقت</h5>
+                    <p class="mb-0">{{ entry.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">السؤال الأصلي</h5>
+                    <p class="mb-0">{{ entry.user_query }}</p>
+                </div>
+                
+                {% if entry.corrected_query and entry.corrected_query != entry.user_query %}
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">السؤال المصحح</h5>
+                    <p class="mb-0">{{ entry.corrected_query }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">الإجابة</h5>
+                    <div class="p-3 rounded">
+                        {% if entry.answer %}
+                            {{ entry.answer|replace('\n', '<br>')|safe }}
+                        {% else %}
+                            <span class="text-muted">لا توجد إجابة</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if chunks %}
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">المصادر المستخدمة</h5>
+                    <div class="accordion" id="accordionSources">
+                        {% for chunk in chunks %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" 
+                                        aria-controls="collapse{{ loop.index }}">
+                                    {% if chunk is string %}
+                                        مصدر قانوني
+                                    {% else %}
+                                        {{ chunk.article if chunk.article else 'مصدر قانوني' }}
+                                    {% endif %}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" 
+                                 aria-labelledby="heading{{ loop.index }}" data-bs-parent="#accordionSources">
+                                <div class="accordion-body">
+                                    {% if chunk is string %}
+                                        {{ chunk }}
+                                    {% else %}
+                                        {{ chunk.text if chunk.text else chunk }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">المصادر المستخدمة</h5>
+                    <div class="alert alert-info">
+                        لم يتم العثور على مصادر محددة
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="mt-4 text-center">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-question-circle me-2"></i> طرح سؤال جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

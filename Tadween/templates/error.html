@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}خطأ{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white py-3">
+          <h3 class="mb-0 text-center">حدث خطأ</h3>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-danger">
+            <h5 class="alert-heading">تفاصيل الخطأ:</h5>
+            <p class="mb-0">{{ error }}</p>
+          </div>
+          
+          <p class="text-center">حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى أو التواصل مع مسؤول النظام.</p>
+          
+          {% if details %}
+          <div class="mt-4">
+            <button class="btn btn-sm btn-outline-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#errorDetails">
+              عرض التفاصيل التقنية
+            </button>
+            <div class="collapse mt-2" id="errorDetails">
+              <div class="card card-body bg-light">
+                <pre dir="ltr" class="mb-0" style="font-size: 0.85rem; overflow-x: auto;">{{ details }}</pre>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          
+          <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">العودة إلى الصفحة الرئيسية</a>
+            <a href="{{ url_for('test_arabic_json') }}" class="btn btn-outline-secondary">المحاولة مرة أخرى</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

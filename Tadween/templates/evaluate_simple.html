@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}تقييم النظام - طريقة مباشرة{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">تقييم النظام - طريقة مباشرة</li>
+                </ol>
+            </nav>
+            <h1 class="mb-4">تقييم أداء نظام تدوين (الطريقة المباشرة)</h1>
+            
+            <div class="alert alert-info">
+                <h5>طريقة الاستخدام:</h5>
+                <p>قم بإدخال سؤال وإجابة متوقعة وانقر على "تقييم"، وسيقوم النظام بتوليد إجابة ومقارنتها بالإجابة المتوقعة.</p>
+                <p>يمكنك إضافة المزيد من الأسئلة والإجابات بالنقر على "إضافة سؤال جديد".</p>
+            </div>
+            
+            <form id="evaluationForm" method="post" action="{{ url_for('evaluate_simple') }}">
+                <div id="questions-container">
+                    <div class="card mb-3 question-card">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">السؤال:</label>
+                                <textarea name="questions[]" class="form-control" rows="2" required>ما هي مدة الإجازة السنوية التي يستحقها العامل؟</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">الإجابة المتوقعة:</label>
+                                <textarea name="answers[]" class="form-control" rows="3" required>يستحق العامل إجازة سنوية مدتها 14 يوم عمل مدفوعة الأجر عن كل سنة خدمة، وتكون 21 يوم عمل إذا أمضى في الخدمة لدى صاحب العمل نفسه خمس سنوات متصلة.</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="button" id="addQuestion" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-plus-circle"></i> إضافة سؤال جديد
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-lightning-charge"></i> تقييم
+                    </button>
+                </div>
+            </form>
+            
+            {% if results %}
+            <div class="mt-5">
+                <h2>نتائج التقييم</h2>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h5 class="mb-0">النتائج الإجمالية</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">عدد الأسئلة</h6>
+                                        <h2 class="display-6">{{ results.metrics.total_questions }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">متوسط تقييم BLEU</h6>
+                                        <h2 class="display-6">{{ "%.3f"|format(results.metrics.average_bleu_score) }}</h2>
+                                        <div class="score-meter">
+                                            <div class="score-value bleu-score" style="width: {{ results.metrics.average_bleu_score * 100 }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">متوسط تقييم BERT</h6>
+                                        <h2 class="display-6">{{ "%.3f"|format(results.metrics.average_bert_score) }}</h2>
+                                        <div class="score-meter">
+                                            <div class="score-value bert-score" style="width: {{ results.metrics.average_bert_score * 100 }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100 border-primary">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-primary fw-bold">متوسط تقييم LLM</h6>
+                                        <h2 class="display-6 text-primary">{{ "%.3f"|format(results.metrics.average_llm_score) }}</h2>
+                                        <div class="score-meter">
+                                            <div class="score-value llm-score" style="width: {{ results.metrics.average_llm_score * 100 }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="25%">السؤال</th>
+                                <th width="23%">الإجابة المتوقعة</th>
+                                <th width="32%">إجابة النظام</th>
+                                <th width="5%">BLEU</th>
+                                <th width="5%">BERT</th>
+                                <th width="5%" class="bg-light">LLM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in results.results %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.question }}</td>
+                                <td>{{ item.ground_truth }}</td>
+                                <td>{{ item.prediction }}</td>
+                                <td><span class="badge {{ 'bg-danger' if item.bleu_score < 0.3 else 'bg-warning' if item.bleu_score < 0.6 else 'bg-success' }}">{{ "%.3f"|format(item.bleu_score) }}</span></td>
+                                <td><span class="badge {{ 'bg-danger' if item.bert_score < 0.3 else 'bg-warning' if item.bert_score < 0.6 else 'bg-success' }}">{{ "%.3f"|format(item.bert_score) }}</span></td>
+                                <td class="bg-light"><span class="badge {{ 'bg-danger' if item.llm_score < 0.3 else 'bg-warning' if item.llm_score < 0.6 else 'bg-primary' }}">{{ "%.3f"|format(item.llm_score) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .score-meter {
+        height: 6px;
+        background-color: rgba(0,0,0,0.1);
+        border-radius: 4px;
+        margin-top: 10px;
+        position: relative;
+        overflow: hidden;
+    }
+    .score-value {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease-out;
+    }
+    .bleu-score {
+        background: linear-gradient(to right, var(--bs-danger), var(--bs-warning), var(--bs-success));
+    }
+    .bert-score {
+        background: linear-gradient(to right, var(--bs-danger), var(--bs-info), var(--bs-primary));
+    }
+    .llm-score {
+        background: linear-gradient(45deg, var(--bs-primary), var(--bs-purple));
+        background-size: 1rem 1rem;
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+    @keyframes progress-bar-stripes {
+        0% { background-position: 1rem 0; }
+        100% { background-position: 0 0; }
+    }
+    .question-card {
+        position: relative;
+    }
+    .remove-question {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: var(--bs-danger);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionsContainer = document.getElementById('questions-container');
+        const addQuestionBtn = document.getElementById('addQuestion');
+        
+        // Add new question form
+        addQuestionBtn.addEventListener('click', function() {
+            const newCard = document.createElement('div');
+            newCard.className = 'card mb-3 question-card';
+            newCard.innerHTML = `
+                <div class="card-body">
+                    <span class="remove-question" title="إزالة السؤال"><i class="bi bi-x-circle"></i></span>
+                    <div class="mb-3">
+                        <label class="form-label">السؤال:</label>
+                        <textarea name="questions[]" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الإجابة المتوقعة:</label>
+                        <textarea name="answers[]" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+            `;
+            questionsContainer.appendChild(newCard);
+            
+            // Add remove event for the new question
+            const removeBtn = newCard.querySelector('.remove-question');
+            removeBtn.addEventListener('click', function() {
+                questionsContainer.removeChild(newCard);
+            });
+        });
+        
+        // Add remove events to existing questions (if added by server-side)
+        document.querySelectorAll('.remove-question').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const card = this.closest('.question-card');
+                questionsContainer.removeChild(card);
+            });
+        });
+    });
+</script>
+{% endblock %}

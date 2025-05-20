@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title mb-0">جهات الاتصال - وزارة العمل الأردنية</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for contact in contacts %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex align-items-center">
+                                <i class="fas fa-building me-2"></i>
+                                <h5 class="mb-0">{{ contact.name }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    {% if contact.position %}
+                                    <li class="list-group-item d-flex">
+                                        <i class="fas fa-user-tie me-2 mt-1"></i>
+                                        <div>
+                                            <strong>الفرع:</strong><br>
+                                            {{ contact.position }}
+                                        </div>
+                                    </li>
+                                    {% endif %}
+                                    <li class="list-group-item d-flex">
+                                        <i class="fas fa-phone me-2 mt-1"></i>
+                                        <div>
+                                            <strong>رقم الهاتف:</strong><br>
+                                            <a href="tel:{{ contact.phone }}" class="text-decoration-none">{{ contact.phone }}</a>
+                                        </div>
+                                    </li>
+                                    {% if contact.email %}
+                                    <li class="list-group-item d-flex">
+                                        <i class="fas fa-envelope me-2 mt-1"></i>
+                                        <div>
+                                            <strong>البريد الإلكتروني:</strong><br>
+                                            <a href="mailto:{{ contact.email }}" class="text-decoration-none">{{ contact.email }}</a>
+                                        </div>
+                                    </li>
+                                    {% endif %}
+                                    {% if contact.address %}
+                                    <li class="list-group-item d-flex">
+                                        <i class="fas fa-map-marker-alt me-2 mt-1"></i>
+                                        <div>
+                                            <strong>العنوان:</strong><br>
+                                            {{ contact.address }}
+                                        </div>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>ملاحظة:</strong> جميع المعلومات المقدمة هنا هي للأغراض الإعلامية فقط. يُرجى التأكد من آخر التحديثات من خلال الموقع الرسمي لوزارة العمل.
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="mb-3">قانون العمل الأردني</h4>
+                                <p>يمكنك تحميل نسخة من قانون العمل الأردني رقم 16 لسنة 1996 وتعديلاته للاطلاع عليه</p>
+                                <a href="{{ url_for('static', filename='docs/jordan_labor_law.pdf') }}" class="btn btn-success" download>
+                                    <i class="fas fa-file-pdf me-2"></i> تحميل قانون العمل الأردني
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="https://www.mol.gov.jo" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-2"></i> زيارة الموقع الرسمي لوزارة العمل
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

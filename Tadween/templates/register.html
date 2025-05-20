@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 col-lg-4 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title mb-0">تدوين - إنشاء حساب جديد</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">اسم المستخدم</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <div class="form-text">اختر اسم مستخدم فريد باللغة العربية أو الإنجليزية.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">كلمة المرور</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">اختر كلمة مرور قوية من 8 أحرف على الأقل.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">إنشاء الحساب</button>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">العودة إلى تسجيل الدخول</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

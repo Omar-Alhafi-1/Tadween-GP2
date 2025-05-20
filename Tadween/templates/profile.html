@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title mb-0">الملف الشخصي</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4 mb-md-0">
+                        <div class="avatar-container mb-3">
+                            <i class="fas fa-user-circle fa-6x text-primary"></i>
+                        </div>
+                        <h3>{{ username }}</h3>
+                    </div>
+                    <div class="col-md-8">
+                        <h4>إحصائيات النشاط</h4>
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h5>الأسئلة</h5>
+                                        <div class="display-6 text-info">{{ question_count }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{{ url_for('history') }}" class="btn btn-primary">
+                                <i class="fas fa-history me-2"></i> عرض سجل الأسئلة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

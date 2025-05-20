@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">مساعد قانون العمل الأردني</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Welcome Message -->
+                    <div id="welcome-message" class="text-center mb-4">
+                        <h5>مرحباً بك في مساعد قانون العمل الأردني</h5>
+                        <p class="text-muted">اطرح سؤالك حول قانون العمل وسأجيبك بناءً على التشريعات الأردنية</p>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div id="chat-messages" class="mb-4" style="height: 400px; overflow-y: auto;">
+                        <!-- Messages will be added here dynamically -->
+                    </div>
+                    
+                    <!-- Message Input -->
+                    <form id="question-form" class="mt-3">
+                        <div class="input-group">
+                            <input type="text" id="question" class="form-control" placeholder="اكتب سؤالك هنا..." dir="rtl">
+                            <button type="submit" id="submit-btn" class="btn btn-primary">إرسال</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Answer Container -->
+<div id="answer-container" class="container mt-4 d-none">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">الإجابة</h5>
+                </div>
+                <div class="card-body">
+                    <div id="answer-text"></div>
+                    
+                    <!-- Sources List -->
+                    <div class="mt-4">
+                        <h6>المصادر القانونية:</h6>
+                        <div id="sources-list" class="list-group"></div>
+                    </div>
+                    
+                    <!-- Metrics Container -->
+                    <div id="metrics-container" class="mt-4 d-none">
+                        <h6>مقاييس الجودة:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p>درجة BLEU: <span id="bleu-score">-</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>درجة BERT: <span id="bert-score">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block additional_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chat-messages');
+    const welcomeMessage = document.getElementById('welcome-message');
+    let isProcessing = false;
+
+    // Function to add a message to the chat
+    function addMessage(message, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'} mb-3`;
+        messageDiv.style.textAlign = isUser ? 'left' : 'right';
+        messageDiv.style.direction = 'rtl';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = `p-3 rounded ${isUser ? 'bg-light' : 'bg-primary text-white'}`;
+        messageContent.style.display = 'inline-block';
+        messageContent.style.maxWidth = '80%';
+        messageContent.textContent = message;
+        
+        messageDiv.appendChild(messageContent);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Handle form submission
+    document.getElementById('question-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (isProcessing) return;
+        
+        const message = document.getElementById('question').value.trim();
+        if (!message) return;
+
+        try {
+            isProcessing = true;
+            
+            // Hide welcome message
+            welcomeMessage.style.display = 'none';
+            
+            // Add user message to chat
+            addMessage(message, true);
+            document.getElementById('question').value = '';
+
+            // Add loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot-message mb-3';
+            loadingDiv.innerHTML = `
+                <div class="p-3 rounded bg-light" style="display: inline-block;">
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(loadingDiv);
+
+            // Send request to server
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: message })
+            });
+
+            // Remove loading indicator
+            loadingDiv.remove();
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            
+            if (data.error) {
+                addMessage('عذراً، حدث خطأ في معالجة سؤالك. يرجى المحاولة مرة أخرى.');
+            } else {
+                addMessage(data.answer);
+                
+                // Add sources if available
+                if (data.sources && data.sources.length > 0) {
+                    const sourcesDiv = document.createElement('div');
+                    sourcesDiv.className = 'sources mt-2';
+                    sourcesDiv.style.fontSize = '0.9em';
+                    sourcesDiv.style.color = '#666';
+                    
+                    const sourcesTitle = document.createElement('div');
+                    sourcesTitle.textContent = 'المصادر القانونية:';
+                    sourcesDiv.appendChild(sourcesTitle);
+                    
+                    data.sources.forEach(source => {
+                        const sourceDiv = document.createElement('div');
+                        sourceDiv.textContent = `المادة ${source.article}: ${source.text}`;
+                        sourcesDiv.appendChild(sourceDiv);
+                    });
+                    
+                    chatMessages.appendChild(sourcesDiv);
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            addMessage('عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
+        } finally {
+            isProcessing = false;
+        }
+    });
+});
+</script>
+{% endblock %}
+
+<style>
+.message {
+    margin-bottom: 1rem;
+}
+
+.user-message {
+    text-align: left;
+}
+
+.bot-message {
+    text-align: right;
+}
+
+#chat-messages {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.sources {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Typing indicator animation */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background-color: #666;
+    border-radius: 50%;
+    margin: 0 2px;
+    display: inline-block;
+    animation: bounce 1.5s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-8px);
+    }
+}
+</style>
+{% endblock %}
